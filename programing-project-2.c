@@ -11,18 +11,30 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <errno.h>
+#include <string.h>
 
 int debug = 0;
 
 void signalHandler(int signal) {
-    if (signal == SIGINT) debug = !debug;               // Toggle debug flag
-    else if (signal == SIGUSR1) exit(0);                // Exit with status 0
+    // Toggle debug flag
+    if (signal == SIGINT) debug = !debug;
+    // Exit program
+    else if (signal == SIGUSR1) exit(0);
 }
 
 void main() {
-    signal(SIGINT, signalHandler);                      // Register signal handlers
-    signal(SIGUSR1, signalHandler);
+    // Register signal handlers
+    if(signal(SIGINT, signalHandler) == SIG_ERR) {
+        fprintf(stderr, "Error %d while registering SIGINT signal handler: %s\n", errno, strerror(errno));
+        exit(errno);
+    }
+    if (signal(SIGUSR1, signalHandler) == SIG_ERR) {
+        fprintf(stderr, "Error %d while registering SIGUSR1 signal handler: %s\n", errno, strerror(errno));
+        exit(errno);
+    }
     
+    // Loop forever
     for (int itr = 0; 1; itr++) {
         sleep(2);                                       // Sleep for 2 seconds
         if (debug) printf("iteration: %d\n", itr);      // Print iternation number if debug is on
